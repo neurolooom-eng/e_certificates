@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """
-Fetch every PDF in the certificate Drive folder and write certificates.json
+Fetch every PDF in the FIDE event's certificate Drive folder and write
+tournaments/fide-below-1800-2026/certificates.json
 (rank -> {name, file_id, view_url, download_url}).
 
 Two auth options:
@@ -25,7 +26,7 @@ import re
 import sys
 
 FOLDER_ID = "1aHL32jEuGZan2Zj5PpfY3gq9USJ43WW5"
-OUT = "certificates.json"
+OUT = "tournaments/fide-below-1800-2026/certificates.json"
 
 # Filename pattern: 068_Kapuram_Venkata_Sree_Chetan_Reddy.pdf
 NAME_RE = re.compile(r"^(\d+)_(.+)\.pdf$", re.IGNORECASE)
@@ -116,6 +117,7 @@ def main():
         }
 
     ordered = [records[r] for r in sorted(records)]
+    os.makedirs(os.path.dirname(OUT), exist_ok=True)
     with open(OUT, "w", encoding="utf-8") as f:
         json.dump(ordered, f, indent=2, ensure_ascii=False)
 
