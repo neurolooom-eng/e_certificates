@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 Fetch every certificate image in the FIITJEE event's Drive folder and write
-fiitjee/certificates.json.
+tournaments/fiitjee-tn-children-2026/certificates.json.
 
 The event folder holds one sub-folder per age category:
 
@@ -36,10 +36,7 @@ import re
 
 # https://drive.google.com/drive/folders/124O6VLbF-KEjU3vkysIAlA5HAFmE2Rhd
 ROOT_FOLDER_ID = "124O6VLbF-KEjU3vkysIAlA5HAFmE2Rhd"
-OUT = "fiitjee/certificates.json"
-
-EVENT_TITLE = "3rd FIITJEE Tamilnadu State Level Children's Chess Tournament"
-EVENT_SUB = "Tamilnadu · 2026 · Certificate of Merit"
+OUT = "tournaments/fiitjee-tn-children-2026/certificates.json"
 
 FOLDER_MIME = "application/vnd.google-apps.folder"
 
@@ -65,6 +62,19 @@ def parse(title):
     rank = int(m.group(1))
     name = m.group(2).replace("_", " ").strip()
     return rank, name
+
+
+def gaps(ranks):
+    """Report numbering gaps as ranges, e.g. [(53, 99)].
+
+    Not necessarily a problem: Under 11 Boys legitimately numbers 1-52 and then
+    100-108, so a gap is worth showing but is not an error.
+    """
+    out, seen = [], sorted(ranks)
+    for prev, nxt in zip(seen, seen[1:]):
+        if nxt > prev + 1:
+            out.append((prev + 1, nxt - 1))
+    return out
 
 
 def clean_name(name):
@@ -173,19 +183,14 @@ def main():
             "records": ordered,
         })
 
-        missing = [r for r in range(1, max(records) + 1) if r not in records] if records else []
         print(f"{label:16s} {len(ordered):4d} certificates", end="")
-        print(f"  MISSING RANKS: {missing}" if missing else "")
+        print(f"  gaps in numbering: {gaps(records)}" if gaps(records) else "")
         if skipped:
             print(f"  skipped {len(skipped)} non-matching: {skipped[:5]}"
                   f"{'...' if len(skipped) > 5 else ''}")
 
-    payload = {
-        "event": EVENT_TITLE,
-        "subtitle": EVENT_SUB,
-        "root_folder_id": ROOT_FOLDER_ID,
-        "categories": categories,
-    }
+    # Titles live in build_site.py's TOURNAMENTS registry, not here.
+    payload = {"root_folder_id": ROOT_FOLDER_ID, "categories": categories}
     os.makedirs(os.path.dirname(OUT), exist_ok=True)
     with open(OUT, "w", encoding="utf-8") as f:
         json.dump(payload, f, indent=2, ensure_ascii=False)
