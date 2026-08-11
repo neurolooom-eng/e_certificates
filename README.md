@@ -49,7 +49,10 @@ would be indistinguishable.
 
 ## Notes
 - The Drive folder (and the files in it) must be shared so recipients can open
-  them — "Anyone with the link → Viewer" is the usual setting for public handout.
+  them — "Anyone with the link → **Viewer**" is the setting to use. Check this
+  before publishing: the FIITJEE folder was uploaded as "Anyone with the link →
+  Editor", which lets any recipient rename, replace or delete every certificate
+  in the folder, not just their own.
 - Links open Drive's viewer. To force a direct download instead, the page could
   use the `download_url` field already present in each `certificates.json`.
 - The number in a filename is taken as the participant's rank and shown with an
