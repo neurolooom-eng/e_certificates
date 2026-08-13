@@ -64,11 +64,28 @@ def parse(title):
     return rank, name
 
 
+# Certificates per category as of the 2026 event, for the completeness check
+# below. Every category numbers contiguously from 1, so a short run means files
+# are missing — not that the organisers skipped numbers.
+EXPECTED_COUNTS = {
+    "Under8_Boys_Certificates": 69,
+    "Under8_Girls_Certificates": 29,
+    "Under11_Boys_Certificates": 108,
+    "Under11_Girls_Certificates": 35,
+    "Under14_Boys_Certificates": 78,
+    "Under14_Girls_Certificates": 14,
+    "Under17_Certificates": 31,
+}
+
+
 def gaps(ranks):
     """Report numbering gaps as ranges, e.g. [(53, 99)].
 
-    Not necessarily a problem: Under 11 Boys legitimately numbers 1-52 and then
-    100-108, so a gap is worth showing but is not an error.
+    Always a problem here. A gap like that came from listing a Drive folder
+    while it was still being uploaded: the uploader works in lexicographic
+    order, where "100_" sorts directly after "09_", so a folder of 108 files
+    can transiently hold 1-52 plus 100-108 and nothing between. Re-run once
+    the upload has settled.
     """
     out, seen = [], sorted(ranks)
     for prev, nxt in zip(seen, seen[1:]):
@@ -183,8 +200,17 @@ def main():
             "records": ordered,
         })
 
+        # A truncated folder listing is the failure mode to catch here, and a
+        # run cut off at its tail still looks contiguous — so check the count,
+        # not just the gaps.
+        expected = EXPECTED_COUNTS.get(folder_name)
+        notes = []
+        if gaps(records):
+            notes.append(f"gaps in numbering: {gaps(records)}")
+        if expected is not None and len(ordered) != expected:
+            notes.append(f"expected {expected} — upload may still be in progress")
         print(f"{label:16s} {len(ordered):4d} certificates", end="")
-        print(f"  gaps in numbering: {gaps(records)}" if gaps(records) else "")
+        print(f"  WARNING: {'; '.join(notes)}" if notes else "")
         if skipped:
             print(f"  skipped {len(skipped)} non-matching: {skipped[:5]}"
                   f"{'...' if len(skipped) > 5 else ''}")
